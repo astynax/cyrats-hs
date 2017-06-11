@@ -17,9 +17,19 @@ library
   hs-source-dirs:      src
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
+                     , hashable
+                     , lens
+                     , mtl
+                     , text
+                     , unordered-containers
   exposed-modules:     Cyrats
                      , Cyrats.Domain
+                     , Cyrats.Domain.Garage
                      , Cyrats.Domain.Rat
+                     , Cyrats.Utils
+                     , Cyrats.Utils.Collection
+                     , Cyrats.Utils.Except
+
 executable cyrats-hs
   hs-source-dirs:      app
   main-is:             Main.hs
@@ -30,9 +40,18 @@ executable cyrats-hs
 test-suite cyrats-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
-  main-is:             Spec.hs
+  main-is:             Main.hs
+  other-modules:       DomainSpec
+                     , DomainSpec.GarageSpec
+                     , DomainSpec.RatSpec
+                     , Shortcuts
+                     , UtilsSpec
+                     , UtilsSpec.CollectionSpec
   build-depends:       base
-                     , hspec
                      , cyrats-hs
+                     , hashable
+                     , hspec
+                     , lens
+                     , mtl
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
