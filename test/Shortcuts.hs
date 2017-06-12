@@ -1,5 +1,7 @@
 -- | Utils for testing
-module Shortcuts where
+module Shortcuts
+    ( module Shortcuts
+    ) where
 
 import Control.Monad.Except
 import Data.Either
@@ -9,17 +11,17 @@ import Cyrats
 
 shortcutsSpec :: Spec
 shortcutsSpec =
-    describe "Shortcuts" $ do
-        describe "hull" $ do
-            it "just works" $
-                map
-                    sum
-                    [ hull (Just 1) (Just 2) (Just 3)
-                    , hull (Just 1) Nothing Nothing
-                    , hull Nothing (Just 2) Nothing
-                    , hull Nothing Nothing (Just 3)
-                    ] `shouldBe`
-                [6, 1, 2, 3]
+    describe "Shortcuts" $
+    describe "hull" $
+    it "just works" $
+    map
+        sum
+        [ hull (Just 1) (Just 2) (Just 3)
+        , hull (Just 1) Nothing Nothing
+        , hull Nothing (Just 2) Nothing
+        , hull Nothing Nothing (Just 3)
+        ] `shouldBe`
+    [6, 1, 2, 3]
 
 m :: Int -> Int -> Int -> Maybe RatModule
 m x y z = Just $ Module (x, y, z)
@@ -31,6 +33,9 @@ hull h b t =
     run = either (error "Oops!") id . runExcept
     put _ Nothing old = pure old
     put s (Just m) old = placeTo s m old
+
+fromRight :: Except e a -> a
+fromRight = either (error "Oops!") id . runExcept
 
 shouldGet
     :: (Eq a, Show a)

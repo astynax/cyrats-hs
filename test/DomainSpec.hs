@@ -1,5 +1,7 @@
 -- | Domain Specs
-module DomainSpec where
+module DomainSpec
+    ( domainSpec
+    ) where
 
 import Test.Hspec
 

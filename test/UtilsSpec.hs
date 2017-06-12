@@ -1,9 +1,11 @@
 -- | Utils Specs
-module UtilsSpec where
+module UtilsSpec
+    ( utilsSpec
+    ) where
 
 import Test.Hspec
 
 import UtilsSpec.CollectionSpec
 
 utilsSpec :: Spec
-utilsSpec = describe "Utils" $ collectionSpec
+utilsSpec = describe "Utils" collectionSpec

@@ -1,8 +1,9 @@
 -- | Collection Specs
-module UtilsSpec.CollectionSpec where
+module UtilsSpec.CollectionSpec
+    ( collectionSpec
+    ) where
 
 import Data.Char
-import Data.Hashable
 import Test.Hspec
 
 import Cyrats
@@ -15,30 +16,36 @@ someCollection = fromList ['a' .. 'z']
 someEmptyCollection :: Collection ()
 someEmptyCollection = empty
 
+someBadKey :: Key
+someBadKey = -1
+
 collectionSpec :: Spec
 collectionSpec =
     describe "Collection" $ do
         describe "killAt" $ do
             it "fails on empty collection" $
-                shouldExplode $ killAt (hash ()) someEmptyCollection
+                shouldExplode $ killAt 0 someEmptyCollection
             it "fails if key not found" $
-                let badKey = hash 'A'
-                in shouldExplode $ killAt badKey someCollection
+                shouldExplode $ killAt someBadKey someCollection
             it "works for the valid key" $
-                let ((k, v):xs) = toList someCollection
-                    c = fromList (map snd xs)
-                in killAt k someCollection `shouldGet` (v, c)
+                let ((k, v1):kvs) = toList someCollection
+                    (v2, res) = fromRight $ killAt k someCollection
+                in res `like` fromList (map snd kvs)
         describe "modifyAt" $ do
             it "fails on empty collection" $
-                shouldExplode $ modifyAt (hash ()) pure someEmptyCollection
+                shouldExplode $ modifyAt 0 pure someEmptyCollection
             it "fails if key not found" $
-                let badKey = hash 'A'
-                in shouldExplode $ modifyAt badKey pure someCollection
+                shouldExplode $ modifyAt someBadKey pure someCollection
             it "works for the valid keys" $
                 let changedValues = do
                         let coll = fromList "abc"
-                            goUpper k = modifyAt (hash k) (pure . toUpper)
-                        coll' <- goUpper 'a' coll
-                        coll'' <- goUpper 'c' coll'
+                            [k1, k2] =
+                                [ k
+                                | (k, v) <- toList coll
+                                , v == 'a' || v == 'c'
+                                ]
+                            goUpper k = modifyAt k (pure . toUpper)
+                        coll' <- goUpper k1 coll
+                        coll'' <- goUpper k2 coll'
                         return . map snd . toList $ coll''
                 in changedValues `shouldGet` "AbC"

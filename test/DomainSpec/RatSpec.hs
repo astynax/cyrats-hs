@@ -1,5 +1,7 @@
 -- | Rat Specs
-module DomainSpec.RatSpec where
+module DomainSpec.RatSpec
+    ( ratSpec
+    ) where
 
 import Control.Lens
 import Control.Monad.Except
@@ -11,9 +13,13 @@ import Cyrats
 import Shortcuts
 
 ratSpec :: Spec
-ratSpec = describe "Rat" $ do ratHullSpec
+ratSpec =
+    describe "Rat" $ do
+        animateSpec
+        ratHullSpec
 
-ratHullSpec = do
+animateSpec :: Spec
+animateSpec =
     describe "animate" $ do
         it "makes no rats if the hull is incomplete" $
             animate (hull (m 1 2 3) Nothing (m 4 5 6)) `shouldSatisfy`
@@ -21,11 +27,14 @@ ratHullSpec = do
         it "makes a normal rat otherwise" $
             animate (hull (m 1 2 3) (m 10 20 30) (m 4 5 6)) `shouldSatisfy`
             (\r ->
-                 and
-                     [ r ^? _Just . rHealth == Just 15
-                     , r ^? _Just . rAttack == Just 27
-                     , r ^? _Just . rDefence == Just 39
-                     ])
+                 [ r ^? _Just . rHealth
+                 , r ^? _Just . rAttack
+                 , r ^? _Just . rDefence
+                 ] ==
+                 [Just 39, Just 27, Just 15])
+
+ratHullSpec :: Spec
+ratHullSpec = do
     describe "isEnoughFor" $ do
         let someHull = hull (m 1 1 1) (m 1 2 1) (m 1 1 1)
         it "returns True if energy is enough" $ someHull `shouldSatisfy`

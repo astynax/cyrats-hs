@@ -13,50 +13,55 @@ module Cyrats.Utils.Collection
       -- * operations
     , insert
     , killAt
+    , like
     , modifyAt
     , toList
     ) where
 
-import Control.Lens
+import Control.Lens hiding (like)
 import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as M
-import Data.Hashable
+import qualified Data.List as L
 
 import Cyrats.Utils.Except
 
 type Key = Int
 
-newtype Collection a = Collection
-    { _unCollection :: (HashMap Key a)
-    } deriving (Show, Eq)
+data Collection a = Collection
+    { _cSeq :: Key
+    , _cItems :: HashMap Key a
+    } deriving (Show)
 
 makeLenses ''Collection
 
-insert
-    :: Hashable a
-    => a -> Collection a -> Collection a
-insert x = over unCollection $ M.insert (hash x) x
+insert :: a -> Collection a -> Collection a
+insert x c = c & cItems %~ M.insert (c ^. cSeq) x & cSeq %~ (+ 1)
 
 killAt :: Key -> Collection a -> Possible (a, Collection a)
-killAt k = modify k $ \v c -> pure (v, c & unCollection %~ M.delete k)
+killAt k = modify k $ \v c -> pure (v, c & cItems %~ M.delete k)
 
 modifyAt :: Key -> (a -> Possible a) -> Collection a -> Possible (Collection a)
 modifyAt k f =
     modify k $ \v c -> do
         v' <- f v
-        pure $ c & unCollection %~ M.insert k v'
+        pure $ c & cItems %~ M.insert k v'
 
 modify :: Key -> (a -> Collection a -> Possible b) -> Collection a -> Possible b
-modify k next c = do
-    orThrow "Bad key!" (M.lookup k $ c ^. unCollection) >>= flip next c
+modify k next c = orThrow "Bad key!" (M.lookup k $ c ^. cItems) >>= flip next c
 
 toList :: Collection a -> [(Key, a)]
-toList = view $ unCollection . to M.toList
+toList = view $ cItems . to M.toList
 
-fromList
-    :: Hashable a
-    => [a] -> Collection a
-fromList = Collection . M.fromList . Prelude.map (\x -> (hash x, x))
+fromList :: [a] -> Collection a
+fromList = Collection 0 . M.fromList . zip [0 ..]
 
 empty :: Collection a
-empty = Collection M.empty
+empty = Collection 0 M.empty
+
+-- | Just a naive test for similarity (for testing)
+like
+    :: Ord a
+    => Collection a -> Collection a -> Bool
+like c1 c2 =
+    let unpack = L.sort . map snd . M.toList . view cItems
+    in unpack c1 == unpack c2

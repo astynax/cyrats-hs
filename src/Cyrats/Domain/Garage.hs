@@ -6,8 +6,8 @@ module Cyrats.Domain.Garage
     ( Garage()
     , garage
       -- * getters
-    , hulls
-    , modules
+    , gHulls
+    , gModules
       -- * operations with garages
     , addModule
     , addHull
@@ -24,18 +24,12 @@ import qualified Cyrats.Utils as Collection
 data Garage = Garage
     { _gModules :: Collection RatModule
     , _gHulls :: Collection RatHull
-    } deriving (Eq, Show)
+    } deriving (Show)
 
 makeLenses ''Garage
 
 garage :: [RatModule] -> [RatHull] -> Garage
 garage ms hs = Garage (fromList ms) (fromList hs)
-
-modules :: Getter Garage [(Key, RatModule)]
-modules = gModules . to toList
-
-hulls :: Getter Garage [(Key, RatHull)]
-hulls = gHulls . to toList
 
 addModule :: RatModule -> Garage -> Garage
 addModule = over gModules . insert

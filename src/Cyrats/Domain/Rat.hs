@@ -30,7 +30,6 @@ module Cyrats.Domain.Rat
 import Control.Lens
 import Control.Monad.Except
 import Data.Foldable as F
-import Data.Hashable
 import Data.Maybe
 import Data.Monoid
 import Data.Text (Text)
@@ -40,13 +39,9 @@ import Cyrats.Utils
 newtype Module a = Module
     { _mStats :: (a, a, a)
       -- ^ Module stats: HP,AP,DP
-    } deriving (Eq, Foldable, Functor, Monoid, Show)
+    } deriving (Eq, Foldable, Functor, Monoid, Ord, Show)
 
 makeLenses ''Module
-
-instance Hashable a =>
-         Hashable (Module a) where
-    hashWithSalt s = hashWithSalt s . _mStats
 
 type RatModule = Module Int
 
@@ -60,13 +55,9 @@ data Hull a = Hull
     { _rhHead :: !(Maybe a)
     , _rhBody :: !(Maybe a)
     , _rhTail :: !(Maybe a)
-    } deriving (Eq, Foldable, Functor, Show)
+    } deriving (Eq, Foldable, Functor, Ord, Show)
 
 makeLenses ''Hull
-
-instance Hashable a =>
-         Hashable (Hull a) where
-    hashWithSalt s = hashWithSalt s . F.toList
 
 type RatHull = Hull RatModule
 
