@@ -31,7 +31,7 @@ animateSpec =
                  , r ^? _Just . rAttack
                  , r ^? _Just . rDefence
                  ] ==
-                 [Just 39, Just 27, Just 15])
+                 [Just 15, Just 27, Just 39])
 
 ratHullSpec :: Spec
 ratHullSpec = do
