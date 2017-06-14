@@ -1,0 +1,55 @@
+# Package
+name: cyrats-hs
+version: '0.1.0.0'
+synopsis: Multiplayer strategy game
+description:
+  Multiplayer strategy game about post apocalypse,
+  loneliness, survival and the cybernetic rats.
+category: Game
+
+# Author & copyrights
+author: Aleksey Pirogov
+maintainer: astynax84@gmail.com
+copyright: Aleksey Pirogov aka astynax
+license: BSD3
+
+# GitHub repo
+github: astynax/cyrats-hs
+
+# Other options
+extra-source-files:
+- README.md
+
+# Commons
+ghc-options:
+  - -threaded
+  - -rtsopts
+  - -with-rtsopts=-N
+dependencies:
+  - base >=4.7 && <5
+
+# Targets
+library:
+  source-dirs: src
+  dependencies:
+  - lens
+  - mtl
+  - text
+  - unordered-containers
+
+executables:
+  cyrats-hs:
+    main: Main.hs
+    source-dirs: app
+    dependencies:
+    - cyrats-hs
+
+tests:
+  cyrats-test:
+    main: Main.hs
+    source-dirs: test
+    dependencies:
+    - cyrats-hs
+    - hspec
+    - lens
+    - mtl
