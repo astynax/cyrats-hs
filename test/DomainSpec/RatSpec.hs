@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 -- | Rat Specs
 module DomainSpec.RatSpec
     ( ratSpec
@@ -22,46 +24,39 @@ animateSpec :: Spec
 animateSpec =
     describe "animate" $ do
         it "makes no rats if the hull is incomplete" $
-            animate (hull (m 1 2 3) Nothing (m 4 5 6)) `shouldSatisfy`
-            isNothing
+            isNothing (animate "123 _ 456")
         it "makes a normal rat otherwise" $
-            animate (hull (m 1 2 3) (m 10 20 30) (m 4 5 6)) `shouldSatisfy`
-            (\r ->
-                 [ r ^? _Just . rHealth
-                 , r ^? _Just . rAttack
-                 , r ^? _Just . rDefence
-                 ] ==
-                 [Just 15, Just 27, Just 39])
+            let r = animate "123 999 456"
+            in [ r ^? _Just . rHealth
+               , r ^? _Just . rAttack
+               , r ^? _Just . rDefence
+               ] ==
+               [Just 14, Just 16, Just 18]
 
 ratHullSpec :: Spec
 ratHullSpec = do
     describe "isEnoughFor" $ do
-        let someHull = hull (m 1 1 1) (m 1 2 1) (m 1 1 1)
-        it "returns True if energy is enough" $ someHull `shouldSatisfy`
-            isEnoughFor 10
-        it "returns False otherwise" $ someHull `shouldSatisfy`
-            (not . isEnoughFor 9)
+        let someHull = "111 121 111"
+        it "returns True if energy is enough" $ 10 `isEnoughFor` someHull
+        it "returns False otherwise" $ not $ 9 `isEnoughFor` someHull
     describe "placeTo" $ do
-        let eh = hull Nothing Nothing Nothing
-            fh = hull mm mm mm
-            mm@(Just m') = m 1 1 1
+        let m = "111" :: RatModule
         it "works if section IS empty" $ do
-            placeTo HullHead m' eh `shouldGet` hull mm Nothing Nothing
-            placeTo HullBody m' eh `shouldGet` hull Nothing mm Nothing
-            placeTo HullTail m' eh `shouldGet` hull Nothing Nothing mm
+            placeTo HullHead m "_ _ _" `shouldGet` "111 _ _"
+            placeTo HullBody m "_ _ _" `shouldGet` "_ 111 _"
+            placeTo HullTail m "_ _ _" `shouldGet` "_ _ 111"
         it "fails if section ISN'T empty" $ do
-            shouldExplode $ placeTo HullHead m' fh
-            shouldExplode $ placeTo HullBody m' fh
-            shouldExplode $ placeTo HullTail m' fh
+            shouldExplode $ placeTo HullHead m "111 _ _"
+            shouldExplode $ placeTo HullBody m "_ 111 _"
+            shouldExplode $ placeTo HullTail m "_ _ 111"
     describe "removeFrom" $ do
-        let eh = hull Nothing Nothing Nothing :: RatHull
-            fh = hull m1 m2 m3
-            (m1, m2, m3) = (m 1 1 1, m 2 2 2, m 3 3 3)
+        let [m1, m2, m3] = ["111", "222", "333"] :: [RatModule]
         it "works if section ISN'T empty" $ do
-            removeFrom HullHead fh `shouldGet` (fromJust m1, hull Nothing m2 m3)
-            removeFrom HullBody fh `shouldGet` (fromJust m2, hull m1 Nothing m3)
-            removeFrom HullTail fh `shouldGet` (fromJust m3, hull m1 m2 Nothing)
+            removeFrom HullHead "111 222 333" `shouldGet` (m1, "_ 222 333")
+            removeFrom HullBody "111 222 333" `shouldGet` (m2, "111 _ 333")
+            removeFrom HullTail "111 222 333" `shouldGet` (m3, "111 222 _")
         it "fails if section IS empty" $ do
+            let eh = "_ _ _" :: RatHull
             shouldExplode $ removeFrom HullHead eh
             shouldExplode $ removeFrom HullBody eh
             shouldExplode $ removeFrom HullTail eh

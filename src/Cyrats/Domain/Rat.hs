@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
@@ -29,9 +30,11 @@ module Cyrats.Domain.Rat
 
 import Control.Lens
 import Control.Monad.Except
+import Data.Char
 import Data.Foldable as F
 import Data.Maybe
 import Data.Monoid
+import Data.String
 import Data.Text (Text)
 
 import Cyrats.Utils
@@ -69,6 +72,21 @@ data Rat = Rat
     } deriving (Show)
 
 makeLenses ''Rat
+
+instance IsString RatModule where
+    fromString [x, y, z]
+        | isDigit x && isDigit y && isDigit z =
+            Module (digitToInt x, digitToInt y, digitToInt z)
+        | otherwise = error "Malformed string!"
+
+instance IsString RatHull where
+    fromString s =
+        case words s of
+            [x, y, z] -> Hull (mkMod x) (mkMod y) (mkMod z)
+            _ -> error "Malformed string!"
+      where
+        mkMod "_" = Nothing
+        mkMod x = Just $ fromString x
 
 emptyHull :: Hull a
 emptyHull = Hull Nothing Nothing Nothing
