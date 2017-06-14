@@ -3,6 +3,7 @@ module UtilsSpec.CollectionSpec
     ( collectionSpec
     ) where
 
+import Control.Lens
 import Data.Char
 import Test.Hspec
 
@@ -10,14 +11,17 @@ import Cyrats
 
 import Shortcuts
 
-someCollection :: Collection Char
-someCollection = fromList ['a' .. 'z']
+_Identity :: Iso' (Identity a) a
+_Identity = iso runIdentity Identity
 
-someEmptyCollection :: Collection ()
-someEmptyCollection = empty
+someCollection :: Collection (Identity Int) Char
+someCollection = fromListOf _Identity ['a' .. 'z']
 
-someBadKey :: Key
-someBadKey = -1
+someEmptyCollection :: Collection (Identity Int) Char
+someEmptyCollection = fromListOf _Identity []
+
+someBadKey :: Identity Int
+someBadKey = _Identity # (-1)
 
 collectionSpec :: Spec
 collectionSpec =
@@ -30,7 +34,7 @@ collectionSpec =
             it "works for the valid key" $
                 let ((k, v1):kvs) = toList someCollection
                     (v2, res) = fromRight $ killAt k someCollection
-                in res `like` fromList (map snd kvs)
+                in res `looksLike` fromListOf _Identity (map snd kvs)
         describe "modifyAt" $ do
             it "fails on empty collection" $
                 shouldExplode $ modifyAt 0 pure someEmptyCollection
@@ -38,7 +42,7 @@ collectionSpec =
                 shouldExplode $ modifyAt someBadKey pure someCollection
             it "works for the valid keys" $
                 let changedValues = do
-                        let coll = fromList "abc"
+                        let coll = fromListOf _Identity "abc"
                             [k1, k2] =
                                 [ k
                                 | (k, v) <- toList coll

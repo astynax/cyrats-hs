@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 
@@ -6,14 +7,15 @@
 module Cyrats.Utils.Collection
       -- * types
     ( Collection()
-    , Key
       -- * constructors
-    , empty
-    , fromList
+    , fromListOf
+      -- * optics
+    , keys
+    , values
       -- * operations
     , insert
     , killAt
-    , like
+    , looksLike
     , modifyAt
     , toList
     ) where
@@ -25,43 +27,58 @@ import qualified Data.List as L
 
 import Cyrats.Utils.Except
 
-type Key = Int
+type KeyIso k = Iso' k Int
 
-data Collection a = Collection
-    { _cSeq :: Key
-    , _cItems :: HashMap Key a
-    } deriving (Show)
+data Collection k a = Collection
+    { _cSeq :: Int
+    , cKeyIso :: KeyIso k
+    , _cItems :: HashMap Int a
+    }
 
 makeLenses ''Collection
 
-insert :: a -> Collection a -> Collection a
+instance Show a =>
+         Show (Collection k a) where
+    show c = "Collection {" ++ show (c ^. cItems) ++ "}"
+
+insert :: a -> Collection k a -> Collection k a
 insert x c = c & cItems %~ M.insert (c ^. cSeq) x & cSeq %~ (+ 1)
 
-killAt :: Key -> Collection a -> Possible (a, Collection a)
-killAt k = modify k $ \v c -> pure (v, c & cItems %~ M.delete k)
+killAt :: k -> Collection k a -> Possible (a, Collection k a)
+killAt k = modify k $ \k' c v -> pure (v, c & cItems %~ M.delete k')
 
-modifyAt :: Key -> (a -> Possible a) -> Collection a -> Possible (Collection a)
+modifyAt :: k
+         -> (a -> Possible a)
+         -> Collection k a
+         -> Possible (Collection k a)
 modifyAt k f =
-    modify k $ \v c -> do
+    modify k $ \k' c v -> do
         v' <- f v
-        pure $ c & cItems %~ M.insert k v'
+        pure $ c & cItems %~ M.insert k' v'
 
-modify :: Key -> (a -> Collection a -> Possible b) -> Collection a -> Possible b
-modify k next c = orThrow "Bad key!" (M.lookup k $ c ^. cItems) >>= flip next c
+modify :: k
+       -> (Int -> Collection k a -> a -> Possible b)
+       -> Collection k a
+       -> Possible b
+modify k next c = orThrow "Bad key!" (M.lookup key $ c ^. cItems) >>= next key c
+  where
+    key = k ^. cKeyIso c
 
-toList :: Collection a -> [(Key, a)]
-toList = view $ cItems . to M.toList
+toList :: Collection k a -> [(k, a)]
+toList c =
+    view (cItems . to M.toList . to (map . over _1 . review $ cKeyIso c)) c
 
-fromList :: [a] -> Collection a
-fromList = Collection 0 . M.fromList . zip [0 ..]
-
-empty :: Collection a
-empty = Collection 0 M.empty
+fromListOf :: KeyIso k -> [a] -> Collection k a
+fromListOf i = Collection 0 i . M.fromList . zip [0 ..]
 
 -- | Just a naive test for similarity (for testing)
-like
+looksLike
     :: Ord a
-    => Collection a -> Collection a -> Bool
-like c1 c2 =
-    let unpack = L.sort . map snd . M.toList . view cItems
-    in unpack c1 == unpack c2
+    => Collection k a -> Collection k a -> Bool
+looksLike c1 c2 = c1 ^. values . to L.sort == c2 ^. values . to L.sort
+
+keys :: Getter (Collection k a) [k]
+keys = to toList . to (map fst)
+
+values :: Getter (Collection k a) [a]
+values = to toList . to (map snd)
