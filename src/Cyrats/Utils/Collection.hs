@@ -16,6 +16,7 @@ module Cyrats.Utils.Collection
     , insert
     , killAt
     , modifyAt
+    , modifyAt'
     , toList
     ) where
 
@@ -28,9 +29,9 @@ import Cyrats.Utils.Except
 type KeyIso k = Iso' k Int
 
 data Collection k a = Collection
-    { _cSeq :: Int
-    , cKeyIso :: KeyIso k
-    , _cItems :: HashMap Int a
+    { _cSeq :: !Int
+    , cKeyIso :: !(KeyIso k)
+    , _cItems :: !(HashMap Int a)
     }
 
 makeLenses ''Collection
@@ -45,14 +46,22 @@ insert x c = c & cItems %~ M.insert (c ^. cSeq) x & cSeq %~ (+ 1)
 killAt :: k -> Collection k a -> Possible (a, Collection k a)
 killAt k = modify k $ \k' c v -> pure (v, c & cItems %~ M.delete k')
 
+-- | Modify collection at some key
+modifyAt' :: k
+          -> (a -> Possible a)
+          -> Collection k a
+          -> Possible (Collection k a)
+modifyAt' k f = fmap snd . modifyAt k (fmap ((), ) . f)
+
+-- | Modify collection at some key and bypass extra payload
 modifyAt :: k
-         -> (a -> Possible a)
+         -> (a -> Possible (p, a))
          -> Collection k a
-         -> Possible (Collection k a)
+         -> Possible (p, Collection k a)
 modifyAt k f =
     modify k $ \k' c v -> do
-        v' <- f v
-        pure $ c & cItems %~ M.insert k' v'
+        (p, v') <- f v
+        pure . (p, ) $ c & cItems %~ M.insert k' v'
 
 modify :: k
        -> (Int -> Collection k a -> a -> Possible b)
@@ -67,7 +76,7 @@ toList c =
     view (cItems . to M.toList . to (map . over _1 . review $ cKeyIso c)) c
 
 fromListOf :: KeyIso k -> [a] -> Collection k a
-fromListOf i = Collection 0 i . M.fromList . zip [0 ..]
+fromListOf i = foldr insert (Collection 0 i M.empty)
 
 keys :: Getter (Collection k a) [k]
 keys = to toList . to (map fst)

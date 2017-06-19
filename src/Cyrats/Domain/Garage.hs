@@ -17,6 +17,7 @@ module Cyrats.Domain.Garage
     , addModule
     , addHull
     , mountModule
+    , unmountModule
     ) where
 
 import Control.Lens
@@ -57,5 +58,10 @@ addHull = over gHulls . insert
 mountModule :: ModuleKey -> HullKey -> HullSection -> Garage -> Possible Garage
 mountModule mk hk s g = do
     (m, ms) <- killAt mk $ g ^. gModules
-    hs <- modifyAt hk (placeTo s m) $ g ^. gHulls
+    hs <- modifyAt' hk (placeTo s m) $ g ^. gHulls
     pure $ g & gModules .~ ms & gHulls .~ hs
+
+unmountModule :: HullKey -> HullSection -> Garage -> Possible Garage
+unmountModule hk s g = do
+    (m, hs) <- modifyAt hk (removeFrom s) $ g ^. gHulls
+    pure $ g & gModules %~ insert m & gHulls .~ hs

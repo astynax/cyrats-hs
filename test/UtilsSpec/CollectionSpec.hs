@@ -35,21 +35,21 @@ collectionSpec =
                 let ((k, v1):kvs) = toList someCollection
                     (v2, res) = fromRight $ killAt k someCollection
                 in res `looksLike` fromListOf _Identity (map snd kvs)
-        describe "modifyAt" $ do
+        describe "modifyAt'" $ do
             it "fails on empty collection" $
-                shouldExplode $ modifyAt 0 pure someEmptyCollection
+                shouldExplode $ modifyAt' 0 pure someEmptyCollection
             it "fails if key not found" $
-                shouldExplode $ modifyAt someBadKey pure someCollection
+                shouldExplode $ modifyAt' someBadKey pure someCollection
             it "works for the valid keys" $
-                let changedValues = do
-                        let coll = fromListOf _Identity "abc"
-                            [k1, k2] =
-                                [ k
-                                | (k, v) <- toList coll
-                                , v == 'a' || v == 'c'
-                                ]
-                            goUpper k = modifyAt k (pure . toUpper)
-                        coll' <- goUpper k1 coll
-                        coll'' <- goUpper k2 coll'
-                        return . map snd . toList $ coll''
-                in changedValues `shouldGet` "AbC"
+                let changedValues =
+                        fromRight $ do
+                            let coll = fromListOf _Identity "abc"
+                                [k1, k2] =
+                                    [ k
+                                    | (k, v) <- toList coll
+                                    , v == 'a' || v == 'c'
+                                    ]
+                                goUpper k = modifyAt' k (pure . toUpper)
+                            coll' <- goUpper k1 coll
+                            goUpper k2 coll'
+                in changedValues `shouldBeLike` fromListOf _Identity "AbC"

@@ -34,8 +34,8 @@ hull h b t =
     put _ Nothing old = pure old
     put s (Just m) old = placeTo s m old
 
-fromRight :: Except e a -> a
-fromRight = either (error "Oops!") id . runExcept
+fromRight :: Possible a -> a
+fromRight = either (error . ("Oops! " ++) . show) id . runExcept
 
 shouldGet
     :: (Eq a, Show a)
@@ -46,6 +46,13 @@ shouldExplode
     :: Show a
     => Possible a -> Expectation
 shouldExplode = flip shouldSatisfy isLeft . runExcept
+
+infixr 1 `shouldBeLike`
+
+shouldBeLike
+    :: (Ord a, Show a)
+    => Collection k a -> Collection k a -> Expectation
+shouldBeLike x = shouldSatisfy x . looksLike
 
 -- | Just a naive test for similarity (for testing)
 looksLike
