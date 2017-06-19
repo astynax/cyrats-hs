@@ -12,7 +12,7 @@ module Cyrats.Domain.Rat
     ( Module(..)
     , RatModule
     , HullSection(..)
-    , Hull()
+    , Hull(..)
     , RatHull
       -- * constructors
     , emptyHull
@@ -30,12 +30,9 @@ module Cyrats.Domain.Rat
 
 import Control.Lens
 import Control.Monad.Except
-import Data.Char
 import Data.Foldable as F
 import Data.Maybe
 import Data.Monoid
-import Data.String
-import Data.Text (Text)
 
 import Cyrats.Utils
 
@@ -73,21 +70,6 @@ data Rat = Rat
 
 makeLenses ''Rat
 
-instance IsString RatModule where
-    fromString [x, y, z]
-        | isDigit x && isDigit y && isDigit z =
-            Module (digitToInt x, digitToInt y, digitToInt z)
-        | otherwise = error "Malformed string!"
-
-instance IsString RatHull where
-    fromString s =
-        case words s of
-            [x, y, z] -> Hull (mkMod x) (mkMod y) (mkMod z)
-            _ -> error "Malformed string!"
-      where
-        mkMod "_" = Nothing
-        mkMod x = Just $ fromString x
-
 emptyHull :: Hull a
 emptyHull = Hull Nothing Nothing Nothing
 
@@ -110,7 +92,7 @@ placeTo s m h =
         then throwError "Section already contains the module!"
         else pure $ h & atSection s .~ Just m
 
-removeFrom :: HullSection -> Hull a -> Except Text (a, Hull a)
+removeFrom :: HullSection -> Hull a -> Possible (a, Hull a)
 removeFrom s h =
     let (mm, h') = h & atSection s <<.~ Nothing
     in case mm of

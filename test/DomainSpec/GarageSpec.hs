@@ -11,7 +11,8 @@ import Test.Hspec
 
 import Cyrats
 
-import Shortcuts
+import Instances
+import TestUtils
 
 emptyGarage :: Garage
 emptyGarage = garage [] []
@@ -30,15 +31,15 @@ addingSpec =
     describe "addHull,addModule" $ it "just work" $
     let g =
             garage [] [] & addModule "123" & addModule "321" &
-            addHull "222 333 _"
+            addHull "222|333|_"
     in do g ^. gModules `shouldBeLike` mods ["123", "321"]
-          g ^. gHulls `shouldBeLike` hulls ["222 333 _"]
+          g ^. gHulls `shouldBeLike` hulls ["222|333|_"]
 
 mountModuleSpec :: Spec
 mountModuleSpec =
     describe "mountModule" $ it "just works" $ do
         let ms = ["001", "020", "003", "111", "222"]
-            hs = ["_ _ 333", "_ _ _"]
+            hs = ["_|_|333", "_|_|_"]
             g = garage ms hs
             [mk1, mk2, mk3, mk4, mk5] = g ^. gModules . keys
             [hk1, hk2] = g ^. gHulls . keys
@@ -52,7 +53,7 @@ mountModuleSpec =
                     , mountModule mk4 hk1 HullBody
                     ]
         g' ^. gModules `shouldBeLike` mods ["222"]
-        g' ^. gHulls `shouldBeLike` hulls ["_ 111 333", "001 020 003"]
+        g' ^. gHulls `shouldBeLike` hulls ["_|111|333", "001|020|003"]
 
 infixr 1 `shouldBeLike`
 

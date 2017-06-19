@@ -1,19 +1,19 @@
 -- | Utils for testing
-module Shortcuts
-    ( module Shortcuts
+module TestUtils
+    ( module TestUtils
     ) where
 
+import Control.Lens
 import Control.Monad.Except
 import Data.Either
+import qualified Data.List as L
 import Test.Hspec
 
 import Cyrats
 
-shortcutsSpec :: Spec
-shortcutsSpec =
-    describe "Shortcuts" $
-    describe "hull" $
-    it "just works" $
+testUtilsSpec :: Spec
+testUtilsSpec =
+    describe "Shortcuts" $ describe "hull" $ it "just works" $
     map
         sum
         [ hull (Just 1) (Just 2) (Just 3)
@@ -46,3 +46,9 @@ shouldExplode
     :: Show a
     => Possible a -> Expectation
 shouldExplode = flip shouldSatisfy isLeft . runExcept
+
+-- | Just a naive test for similarity (for testing)
+looksLike
+    :: Ord a
+    => Collection k a -> Collection k a -> Bool
+looksLike c1 c2 = c1 ^. values . to L.sort == c2 ^. values . to L.sort

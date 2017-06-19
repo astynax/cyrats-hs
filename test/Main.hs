@@ -11,13 +11,13 @@ import Test.Hspec
 import Cyrats
 
 import DomainSpec
-import Shortcuts
+import TestUtils
 import UtilsSpec
 
 main :: IO ()
 main =
     hspec $ do
-        shortcutsSpec
+        testUtilsSpec
         describe "Cyrats" $ do
             domainSpec
             utilsSpec

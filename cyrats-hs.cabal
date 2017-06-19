@@ -66,11 +66,13 @@ test-suite cyrats-test
     , hspec
     , lens
     , mtl
+    , text
   other-modules:
       DomainSpec
       DomainSpec.GarageSpec
       DomainSpec.RatSpec
-      Shortcuts
+      Instances
+      TestUtils
       UtilsSpec
       UtilsSpec.CollectionSpec
   default-language: Haskell2010

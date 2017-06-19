@@ -15,7 +15,6 @@ module Cyrats.Utils.Collection
       -- * operations
     , insert
     , killAt
-    , looksLike
     , modifyAt
     , toList
     ) where
@@ -23,7 +22,6 @@ module Cyrats.Utils.Collection
 import Control.Lens hiding (like)
 import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as M
-import qualified Data.List as L
 
 import Cyrats.Utils.Except
 
@@ -70,12 +68,6 @@ toList c =
 
 fromListOf :: KeyIso k -> [a] -> Collection k a
 fromListOf i = Collection 0 i . M.fromList . zip [0 ..]
-
--- | Just a naive test for similarity (for testing)
-looksLike
-    :: Ord a
-    => Collection k a -> Collection k a -> Bool
-looksLike c1 c2 = c1 ^. values . to L.sort == c2 ^. values . to L.sort
 
 keys :: Getter (Collection k a) [k]
 keys = to toList . to (map fst)

@@ -53,3 +53,4 @@ tests:
     - hspec
     - lens
     - mtl
+    - text

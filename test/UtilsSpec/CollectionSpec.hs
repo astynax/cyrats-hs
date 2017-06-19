@@ -9,7 +9,7 @@ import Test.Hspec
 
 import Cyrats
 
-import Shortcuts
+import TestUtils
 
 _Identity :: Iso' (Identity a) a
 _Identity = iso runIdentity Identity
