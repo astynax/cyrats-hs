@@ -52,9 +52,9 @@ data HullSection
     deriving (Show)
 
 data Hull a = Hull
-    { _rhHead :: !(Maybe a)
-    , _rhBody :: !(Maybe a)
-    , _rhTail :: !(Maybe a)
+    { _rhHead :: Maybe a
+    , _rhBody :: Maybe a
+    , _rhTail :: Maybe a
     } deriving (Eq, Foldable, Functor, Ord, Show)
 
 makeLenses ''Hull
@@ -62,10 +62,10 @@ makeLenses ''Hull
 type RatHull = Hull RatModule
 
 data Rat = Rat
-    { _rHull :: !RatHull
-    , _rHealth :: !Int
-    , _rAttack :: !Int
-    , _rDefence :: !Int
+    { _rHull :: RatHull
+    , _rHealth :: Int
+    , _rAttack :: Int
+    , _rDefence :: Int
     } deriving (Show)
 
 makeLenses ''Rat
